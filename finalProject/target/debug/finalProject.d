@@ -1,1 +1,1 @@
-C:\Users\shaan\OneDrive\Documents\Programming\ -\ New\CS128H\CS128H-Project\finalProject\target\debug\finalProject.exe: C:\Users\shaan\OneDrive\Documents\Programming\ -\ New\CS128H\CS128H-Project\finalProject\src\lib.rs C:\Users\shaan\OneDrive\Documents\Programming\ -\ New\CS128H\CS128H-Project\finalProject\src\main.rs
+C:\Users\khyy4\Documents\cs128\rust\CS128H-Project\finalProject\target\debug\finalProject.exe: C:\Users\khyy4\Documents\cs128\rust\CS128H-Project\finalProject\src\lib.rs C:\Users\khyy4\Documents\cs128\rust\CS128H-Project\finalProject\src\main.rs

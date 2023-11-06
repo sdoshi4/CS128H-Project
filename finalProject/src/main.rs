@@ -1,12 +1,15 @@
-extern crate finalProject;
+// extern crate finalProject;
 
-use csv::Reader;
-use std::vec::Vec;
+// use csv::Reader;
+// use std::vec::Vec;
 
-use crate::finalProject::*;
+// use crate::finalProject::*;
 
+mod Node;
+
+pub use crate::Node::hi;
 
 fn main() {
     println!("Hello, world!");
-    finalProject::hi();
+    hi();
 }

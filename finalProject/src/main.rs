@@ -6,7 +6,7 @@
 //use crate::finalProject::*;
 
 //mod Node;
-//mod Connec tor;
+//mod Connector;
 //pub use crate::Node::hi;
 
 fn main() {

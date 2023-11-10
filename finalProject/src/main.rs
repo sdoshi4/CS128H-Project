@@ -5,11 +5,11 @@
 
 // use crate::finalProject::*;
 
-mod Node;
+// mod Node;
 
-pub use crate::Node::hi;
+//pub use crate::Node::hi;
 
 fn main() {
     println!("Hello, world!");
-    hi();
+    //hi();
 }

@@ -1,8 +1,8 @@
-mod Node;
+use crate::NeuralNetwork::Node;
 
-struct connector{
+pub struct Connector{
 	weight_: f64,
-	node_: Node,
+	node_: crate::NeuralNetwork::Node::Node,
 }
 
 impl Connector{

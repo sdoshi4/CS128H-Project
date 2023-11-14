@@ -1,13 +1,12 @@
 use std::vec::Vec;
 
-mod Connector;
-// use super::Connector::*;
+use crate::NeuralNetwork::Connector;
 
 
 // pub use crate::Connector::Connector;
 
-struct Node {
-    connectors: Vec<Connector>,
+pub struct Node {
+    connectors: Vec<crate::NeuralNetwork::Connector::Connector>,
     total: f64
 }
 

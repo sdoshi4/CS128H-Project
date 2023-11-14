@@ -5,9 +5,12 @@
 
 //use crate::finalProject::*;
 
-//mod Node;
+mod NeuralNetwork;
+use NeuralNetwork::Connector::Connector;
 //mod Connec tor;
 //pub use crate::Node::hi;
+
+
 
 fn main() {
     println!("Hello, world!");

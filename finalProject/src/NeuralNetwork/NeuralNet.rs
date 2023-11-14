@@ -1,12 +1,12 @@
-mod Nodes;
-mod Connector;
+use crate::NeuralNetwork::Node;
+use crate::NeuralNetwork::Connector;
 use rand::prelude::*;
 use rand::distributions::{Distribution, Normal};
 
-struct MultiLayerNeuralNet{
-	input_nodes: Vec<Nodes>,
-	output_nodes: Vec<Nodes>,
-	connectors: Vec<Connector>,
+pub struct MultiLayerNeuralNet{
+	input_nodes: Vec<crate::NeuralNetwork::Node::Node>,
+	output_nodes: Vec<crate::NeuralNetwork::Node::Node>,
+	connectors: Vec<crate::NeuralNetwork::Connector::Connector>,
 	num_layers: i32,
 	node_per_layer: i32,
 }
@@ -23,15 +23,16 @@ impl MultiLayerNeuralNet{
 
 
 	fn ChangeWeights(std_dev : f64) -> f64{
-		for connector in conntectors{
+		for connector in connectors{
 			connector.weight_ = connector.weight_ *getRandomGaussian(0, std_dev);
 		}
+		todo!()
 	}
 
 
 	// trains the connector weights
 	fn TrainModel(){
-		!todo();
+		todo!();
 	}
 
 	//initializes and connects perceptron layers to input and output

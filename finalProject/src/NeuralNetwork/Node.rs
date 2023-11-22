@@ -6,31 +6,32 @@ use crate::NeuralNetwork::Connector;
 // pub use crate::Connector::Connector;
 
 pub struct Node {
-    connectors: Vec<crate::NeuralNetwork::Connector::Connector>,
-    total: f64
+    connectors_: Vec<crate::NeuralNetwork::Connector::Connector>,
+    total_: f64
 }
 
 impl Node{
-    fn Reset() {
-        total = 0;
+    fn reset(&self) {
+        self.total_ = 0.0;
     }
 
-    fn AddData(value: f64, weight: f64) {
+    fn add_data(&self, value: f64, weight: f64) {
         // default value passed into weight should be 1
-        total += value * weight;
+        self.total_ += value * weight;
     }
 
-    fn Activation() {
-        total = Sigmoid(total);
+    fn activation(&self) {
+        self.total_ = sigmoid(self.total_);
     }
 
-    fn FeedForward() {
-        for connector in connectors {
-            connector.Node.AddData(total, connector.weight);
+    fn feed_forward(&self) {
+        for connector in self.connectors_ {
+            connector.get_node().add_data(self.total_, connector.get_weight());
         }
     }
 }
 
-pub fn Sigmoid(x: f64) -> f64 {
-    1 / (1 + Math.Exp(-x))
+
+pub fn sigmoid(x: f64) -> f64 {
+    1.0 / ((1.0 + f64::exp(-x)))
 }

@@ -6,20 +6,20 @@ pub struct Connector{
 }
 
 impl Connector{
-	// fn get_weight() -> f64{
-	// 	weight_
-	// }
-	// fn set_weight(weight : f64){
-	// 	weight_ = weight; 
-	// }
+	pub fn get_weight(&self) -> f64{
+		self.weight_
+	}
+	pub fn set_weight(&self, weight : f64){
+		self.weight_ = weight; 
+	}
 
-	// fn get_node() -> Node{
-	// 	node_
-	// }
+	pub fn get_node(&self) -> Node::Node{
+		self.node_
+	}
 
-	// fn set_node(node : Node){
-	// 	node_ = node;
-	// }
+	pub fn set_node(&self, node : Node::Node){
+		self.node_ = node;
+	}
 
 
 }

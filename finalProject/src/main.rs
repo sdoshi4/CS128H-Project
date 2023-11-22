@@ -5,9 +5,8 @@
 
 //use crate::finalProject::*;
 
-mod NeuralNetwork;
-use NeuralNetwork::Connector::Connector;
-//mod Connec tor;
+//mod Node;
+//mod Connector;
 //pub use crate::Node::hi;
 
 

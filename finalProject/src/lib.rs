@@ -239,8 +239,8 @@ use rand_distr::num_traits::Pow;
 
 	#[derive(Default, Clone)]
 	pub struct Value{
-		data_: f64,
-		gradient_: f64,
+		pub data_: f64,
+		pub gradient_: f64,
 		pub prev_: Vec<Value>,
 		pub op_: char,
 	}

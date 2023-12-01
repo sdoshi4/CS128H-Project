@@ -150,7 +150,7 @@ impl Layer {
 
 pub struct Perceptron {
     pub layers: Vec<Layer>,
-    pub outputs: Option<Array2<f64>>,
+    pub outputs: Option<Vec<f64>>,
     pub output: Option<usize>,
 }
 
@@ -178,7 +178,7 @@ impl Perceptron {
         }
         let last_hidden = self.layers[output_layer_ind-1].outputs.clone().unwrap();
         self.layers[output_layer_ind].forward(&last_hidden, ActivationFunction::Relu);
-        self.outputs = self.layers[output_layer_ind].outputs.clone();
+        self.outputs = Some(self.layers[output_layer_ind].outputs.clone().unwrap().remove_axis(ndarray::Axis(0)).to_vec());
         self.find_output();
 
         // loss is just -log(ouput[correct_ind])
@@ -187,10 +187,10 @@ impl Perceptron {
         // print(distribution[targ_idx])
     }
 
-    pub fn calculate_loss_log(&mut self, correct_ind: usize) -> f64 {
-        let outputs_clipped: Array2<f64> = self.outputs.clone().unwrap().map(|v| num::clamp(*v, 1e-7, 1.-1e-7));
-        -outputs_clipped[[0, correct_ind]].ln()
-    }
+    // pub fn calculate_loss_log(&mut self, correct_ind: usize) -> f64 {
+    //     let outputs_clipped: Array2<f64> = self.outputs.clone().unwrap().map(|v| num::clamp(*v, 1e-7, 1.-1e-7));
+    //     -outputs_clipped[[0, correct_ind]].ln()
+    // }
 
     pub fn find_output(&mut self) {
         let mut best_ind: usize = 0;
@@ -225,7 +225,7 @@ use rand_distr::num_traits::Pow;
 
 
 	pub struct Value{
-		data_: f64,
+		pub data_: f64,
 		gradient_: f64,
 		pub prev_: Vec<Value>,
 		pub op_: char,

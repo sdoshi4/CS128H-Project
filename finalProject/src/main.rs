@@ -99,3 +99,33 @@ pub fn run(test_data: Array2<f32>, test_labels: Array2<usize>, perceptron: &mut 
     println!("Accuracy: {:?}%", correct as f64 * 100. / 10_000.0);
     
 }
+
+pub fn train(train_data: Array2<f32>, train_labels: Array2<usize>, perceptron: &mut Perceptron) {
+    for i in (0..50_000) {
+        let img = train_data.row(i).clone().into_shape((1, 784)).unwrap();
+        let img2: Array2<Value> = img.map(|x| Value::new(*x as f64));
+        perceptron.run(&img2);
+        let encoded_labels: Vec<Value> = Vec::new();
+        for j in 0..10 {
+            if j == train_labels.row(i).to_vec()[0] {
+                encoded_labels.push(Value::new(1.));
+            } else {
+                encoded_labels.push(Value::new(0.));
+            }
+        }
+        let losses = perceptron.outputs.unwrap().iter().zip(encoded_labels).map(|(x, y)| Value::mul(Value::add(x, Value::mul(y, Value::new(-1.))), Value::add(x, Value::mul(y, Value::new(-1.)))));
+        let mut loss: Value = Value::new(0.);
+        for j in losses {
+            loss = Value::add(loss, j);
+        }
+        println!("Loss: {:?}", loss.data_);
+        loss.backwards();
+
+        // if (perceptron.output.unwrap() == test_labels.row(i).to_vec()[0]) {
+        //     correct += 1;
+        // }
+        // perceptron_outputs.push(perceptron)
+        // let output: usize = perceptron.outputs.unwrap().iter().copied().max().unwrap();
+    }
+}
+// Value::mul(x, y)

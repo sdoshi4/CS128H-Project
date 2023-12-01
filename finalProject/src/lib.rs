@@ -6,6 +6,7 @@ use num::complex::ComplexFloat;
 use rand_distr::Distribution;
 use rand_distr::Normal;
 use num::clamp;
+use ndarray::Array;
 use num::abs;
 // use libm::{exp, floorf, sin, sqrtf};
 // struct Value {
@@ -78,7 +79,7 @@ impl Neuron {
 		let mut rand_array_value:Vec::<Value>= vec![Value::default(); prev_layer_size];
 
 		for row in 0..rand_array_f64.len(){
-			rand_array_value[row] = Value::new(rand_array_f64[row]);
+			rand_array_value[row] = Value::new(rand_array_f64.clone()[[0,row]]);
 		}
 
         let weights: Vec<Value> = rand_array_value;
@@ -124,7 +125,7 @@ impl Layer {
 	
 
 
-    pub fn forward(&mut self, inputs: &Vec<Value>, afunc: ActivationFunction) {
+    pub fn forward(&mut self, inputs: Vec<Value>, afunc: ActivationFunction) {
         let mut outp: Vec<Value>  = vec![Value::default(); self.neurons.len()];
 
 
@@ -133,7 +134,7 @@ impl Layer {
             // let r: f64 = inputs.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
             // let r: f64 = inputs.iter().zip(&self.neurons[i].weights.iter()).map(|(x, y)| x * y).sum();
             // println!("{:?}", outp);
-            let z: Value = Value::add(vec_tot(&mul_vec(inputs, (&self.neurons[i].weights))), self.neurons[i].bias); //.remove_axis(ndarray::Axis(0)).to_vec()[0]
+            let z: Value = Value::add(vec_tot(mul_vec(inputs, (self.neurons[i].weights))), self.neurons[i].bias); //.remove_axis(ndarray::Axis(0)).to_vec()[0]
             outp[i] = z;
            // let a = relu(array![[z]]);
            // self.outputs.unwrap().append(axis, array);
@@ -182,18 +183,18 @@ impl Perceptron {
         let output = None;
         Perceptron { layers, outputs, output }
     }
-    pub fn run(&mut self, inputs: &Vec<Value>) {
+    pub fn run(&mut self, inputs: Vec<Value>) {
         let output_layer_ind = self.layers.len()-1;
         // self.outputs = Some(inputs.dot(&self.weights));
         self.layers[0].forward(inputs, ActivationFunction::Tanh);
         for i in (1..output_layer_ind) { // exclusive, so doesn't do output layer
             let prev = self.layers[i-1].outputs.clone().unwrap();
-            self.layers[i].forward(&prev, ActivationFunction::Tanh);
+            self.layers[i].forward(prev, ActivationFunction::Tanh);
         }
         let last_hidden = self.layers[output_layer_ind-1].outputs.clone().unwrap();
-        self.layers[output_layer_ind].forward(&last_hidden, ActivationFunction::Tanh);
+        self.layers[output_layer_ind].forward(last_hidden, ActivationFunction::Tanh);
         self.outputs = self.layers[output_layer_ind].outputs.clone();
-        self.find_output();
+       // self.find_output();
 
         // loss is just -log(ouput[correct_ind])
         // class_targets = [0, 1, 1]
@@ -206,19 +207,19 @@ impl Perceptron {
     //     -outputs_clipped[[0, correct_ind]].ln()
     // }
 
-    pub fn find_output(&mut self) {
-        let mut best_ind: usize = 0;
-        let mut shortest_distance: f64 = 10.0;
-        let mut ind = 0;
-        for i in self.outputs.clone().unwrap() {
-            if abs(i-1.) < shortest_distance {
-                shortest_distance = abs(i-1.);
-                best_ind = ind;
-            }
-            ind+=1;
-        }
-        self.output = Some(best_ind);
-    }
+    // pub fn find_output(&mut self) {
+    //     let mut best_ind: usize = 0;
+    //     let mut shortest_distance: f64 = 10.0;
+    //     let mut ind = 0;
+    //     for i in self.outputs.clone().unwrap() {
+    //         if abs(i-1.) < shortest_distance {
+    //             shortest_distance = abs(i-1.);
+    //             best_ind = ind;
+    //         }
+    //         ind+=1;
+    //     }
+    //     self.output = Some(best_ind);
+    // }
 
     // pub fn backpropogate(&mut self) {
     //     let alpha: f64 = 0.001;
@@ -381,7 +382,7 @@ use rand_distr::num_traits::Pow;
 	}
 
 
-	pub fn mul_vec(arr1: &Vec<Value>, arr2: &Vec<Value>) -> Vec<Value> {
+	pub fn mul_vec(mut arr1: Vec<Value>, mut arr2: Vec<Value>) -> Vec<Value> {
 
 		if arr1.len() != arr2.len(){
 			panic!("length of vectors are not right for dot product");
@@ -390,14 +391,16 @@ use rand_distr::num_traits::Pow;
 		let mut ret = vec![Value::default(); arr1.len()];
 
 		for i in 0..arr1.len(){
-			ret[i] = Value::mul(arr1[i], arr2[i]);
+			let val1 = arr1.pop().unwrap();
+			let val2 = arr2.pop().unwrap();
+			ret[i] = Value::mul(val1, val2);
 		}
 
 		ret
 
 	}
 
-	pub fn add_vec(arr1: &Vec<Value>, arr2: &Vec<Value>) -> Vec<Value> {
+	pub fn add_vec(mut arr1: Vec<Value>, mut arr2: Vec<Value>) -> Vec<Value> {
 
 		if arr1.len() != arr2.len(){
 			panic!("length of vectors are not right for adding product");
@@ -406,26 +409,29 @@ use rand_distr::num_traits::Pow;
 		let mut ret = vec![Value::default(); arr1.len()];
 
 		for i in 0..arr1.len(){
-			ret[i] = Value::add(arr1[i], arr2[i]);
+			let val1 = arr1.pop().unwrap();
+			let val2 = arr2.pop().unwrap();
+			ret[i] = Value::add(val1, val2);
 		}
 
 		ret
 
 	}
 
-	pub fn vec_tot(arr1: &Vec<Value>) -> Value {
+	pub fn vec_tot(mut arr1: Vec<Value>) -> Value {
 		if arr1.len() == 0{
 			panic!("no contents to add in vector");
 		}
 		else if arr1.len() == 1{
-			return arr1[0];
+            
+			return Value::add(arr1[0].clone(),Value::new(0.0));
 		}
 		else{
-			let mut ret = Value::add(arr1[0], arr1[1]);
-			for i in 2..arr1.len(){
-				ret = Value::add(ret, arr1[i]);
-			}
-			return ret;
+            let mut ret: Value = Value::new(0.0);
+            for i in 0..arr1.len() {
+                ret = Value::add(ret, arr1.pop().unwrap());
+            }
+            ret
 		}
 	}
 

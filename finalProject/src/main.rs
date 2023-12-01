@@ -1,4 +1,5 @@
 extern crate finalProject;
+use finalProject::Neuron;
 use ndarray::Array2;
 use ndarray::array;
 use ndarray::prelude::*;
@@ -120,6 +121,16 @@ pub fn train(train_data: Array2<f32>, train_labels: Array2<usize>, perceptron: &
         }
         println!("Loss: {:?}", loss.data_);
         loss.backwards();
+
+        let learning_rate = -0.01;
+        for &mut layer in perceptron.layers.iter_mut() {
+            for &mut neuron in layer.neurons.iter_mut() {
+                for &mut val in neuron.weights.iter_mut() {
+                    val = Value::add(val, Value::mul(Value::new(learning_rate)), val.gradient_);
+                }
+                neuron.bias = Value::add(bias, Value::mul(Value::new(learning_rate)), bias.gradient_);
+            }
+        }
 
         // if (perceptron.output.unwrap() == test_labels.row(i).to_vec()[0]) {
         //     correct += 1;

@@ -226,7 +226,7 @@ use rand_distr::num_traits::Pow;
 
 	pub struct Value{
 		pub data_: f64,
-		gradient_: f64,
+		pub gradient_: f64,
 		pub prev_: Vec<Value>,
 		pub op_: char,
 	}

@@ -5,6 +5,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+
+
+
+
 [dependencies]
 csv="*"
 rand="*"
@@ -13,3 +17,5 @@ ndarray = "0.15.0"
 ndarray-rand = "0.14.0"
 mnist = "0.6.0"
 num = "0.4.1"
+dot = "0.1.4"
+petgraph = "0.6.4"

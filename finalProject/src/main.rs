@@ -9,6 +9,8 @@ use mnist::*;
 
 
 
+use finalProject::Value;
+ 
 fn main() {
     // let mut p = nn::Perceptron::new(3, 1, 2);
     // let inputs: Array2::<f64> = array![[1.,2.,3.]];

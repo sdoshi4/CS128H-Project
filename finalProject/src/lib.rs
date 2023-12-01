@@ -1,6 +1,4 @@
-use ndarray::Array;
-use ndarray::array;
-use ndarray::Array2;
+
 use ndarray::Axis;
 use ndarray_rand::RandomExt;
 use ndarray::ArrayView;
@@ -27,19 +25,21 @@ pub enum ActivationFunction {
     Relu,
     Sigmoid,
     Softmax,
+	Tanh,
 }
 
-pub fn sigmoid(x: f64) -> f64 {
-    // x.map(|elem| 1. / (1. + (-elem).exp()))
-    1. / (1. + (-x).exp())
-}
+// pub fn sigmoid(x: f64) -> f64 {
+//     // x.map(|elem| 1. / (1. + (-elem).exp()))
+//     1. / (1. + (-x).exp())
+// }
 
-pub fn relu(x: Array2<f64>) -> Array2<f64> {
-    x.map(|elem| elem.max(0.0))
-}
 
-// pub fn print_arr2(arr: Array2<a>){
-//     for row in array2.outer_iter() {
+// pub fn relu(x: Vec<f64>) -> Vec<f64> {
+//     x.map(|elem| elem.max(0.0))
+// }
+
+// pub fn print_arr2(arr: Vec<a>){
+//     for row in Vec.outer_iter() {
 //         // Iterate through the elements in the row
 //         for &element in row {
 //             // Print each element
@@ -50,53 +50,59 @@ pub fn relu(x: Array2<f64>) -> Array2<f64> {
 //     }
 // }
 
-pub fn softmax(x: Array2<f64>) -> Array2<f64> {
-        let mut output = Array2::<f64>::zeros(x.raw_dim());
-        for (in_row, mut out_row) in x.axis_iter(Axis(0)).zip(output.axis_iter_mut(Axis(0))) {
-            let mut max = *in_row.iter().next().unwrap();
-            for col in in_row.iter() {
-                if col > &max {
-                    max = *col;
-                }
-            }
-            let exp = in_row.map(|x| (x-max).exp()); // used to be (x - max).exp()
-            let sum = exp.sum();
-            out_row.assign(&(exp / sum));
-        }
-        output
-}
+// pub fn softmax(x: Vec<f64>) -> Vec<f64> {
+//         let mut output = Vec::<f64>::zeros(x.raw_dim());
+//         for (in_row, mut out_row) in x.axis_iter(Axis(0)).zip(output.axis_iter_mut(Axis(0))) {
+//             let mut max = *in_row.iter().next().unwrap();
+//             for col in in_row.iter() {
+//                 if col > &max {
+//                     max = *col;
+//                 }
+//             }
+//             let exp = in_row.map(|x| (x-max).exp()); // used to be (x - max).exp()
+//             let sum = exp.sum();
+//             out_row.assign(&(exp / sum));
+//         }
+//         output
+// }
 
 pub struct Neuron {
-    pub weights: Array2<f64>,
-    pub bias: f64,
+    pub weights: Vec<Value>,
+    pub bias: Value,
 }
 
 impl Neuron {
     pub fn new(prev_layer_size: usize) -> Self {
-        let weights = Array::random((1, prev_layer_size), Normal::new(0.0, 1.0).unwrap());
-        let bias: f64 = Array::random((1, 1), Normal::new(0.0, 1.0).unwrap()).row(0).to_vec()[0];
+
+		let rand_array_f64= Array::random((1, prev_layer_size), Normal::new(0.0, 1.0).unwrap());
+		let mut rand_array_value:Vec::<Value>= vec![Value::default(); prev_layer_size];
+
+		for row in 0..rand_array_f64.len(){
+			rand_array_value[row] = Value::new(rand_array_f64[row]);
+		}
+
+        let weights: Vec<Value> = rand_array_value;
+        let bias: Value = Value::new(Array::random((1, 1), Normal::new(0.0, 1.0).unwrap()).row(0).to_vec()[0]);
         Neuron {weights, bias }
     }
     pub fn print_nueron(self){
         println!("Neuron data:");
         print!("weights");
-        for row in self.weights.outer_iter() {
-            for &element in row {
-                print!("{} ", element);
-            }
+        for row in 0..self.weights.len() {
+            print!("{} ", self.weights[row].to_string());
             println!();
         }
-        println!("biases{}", self.bias);
+        println!("biases{}", self.bias.to_string());
 
     }
 }
 
 
 pub struct Layer {
-    // pub weights: Array2<f64>,
-    // pub biases: Array2<f64>,
+    // pub weights: Vec<f64>,
+    // pub biases: Vec<f64>,
     pub neurons: Vec<Neuron>,
-    pub outputs: Option<Array2<f64>>,
+    pub outputs: Option<Vec<Value>>,
 }
 
 impl Layer {
@@ -114,26 +120,34 @@ impl Layer {
         // Layer {weights, biases, outputs}
         Layer { neurons, outputs }
     }
-    pub fn forward(&mut self, inputs: &Array2<f64>, afunc: ActivationFunction) {
-        let mut outp: Array2<f64>  = Array2::zeros((1, self.neurons.len()));
+
+	
+
+
+    pub fn forward(&mut self, inputs: &Vec<Value>, afunc: ActivationFunction) {
+        let mut outp: Vec<Value>  = vec![Value::default(); self.neurons.len()];
+
+
         for i in 0..self.neurons.len() {
             // let my_speed_ptr: *mut i32 = &mut my_speed;
             // let r: f64 = inputs.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
             // let r: f64 = inputs.iter().zip(&self.neurons[i].weights.iter()).map(|(x, y)| x * y).sum();
             // println!("{:?}", outp);
-            let z: f64 = (inputs * (&self.neurons[i].weights)).sum() + &self.neurons[i].bias; //.remove_axis(ndarray::Axis(0)).to_vec()[0]
-            outp[[0, i]] = z;
-            // let a = relu(array![[z]]);
-            // self.outputs.unwrap().append(axis, array)
-            // if (afunc == ActivationFunction::Relu) {
-            //     outp[[0, i]] = z; // array![[&z]]
-            // } else if (afunc == ActivationFunction::Sigmoid) {
-            //     outp[[0, i]] = sigmoid(z);
-            // }
-            // } else if (afunc == ActivationFunction::Softmax) {
-            //     self.outputs = Some(softmax(inputs.dot(&self.weights) + &self.biases));
-            // }
-            // }
+            let z: Value = Value::add(vec_tot(&mul_vec(inputs, (&self.neurons[i].weights))), self.neurons[i].bias); //.remove_axis(ndarray::Axis(0)).to_vec()[0]
+            outp[i] = z;
+           // let a = relu(array![[z]]);
+           // self.outputs.unwrap().append(axis, array);
+
+            if afunc == ActivationFunction::Relu {
+                //outp[[0, i]] = z; // array![[&z]]
+            } else if afunc == ActivationFunction::Sigmoid {
+                //outp[[0, i]] = sigmoid(z);
+            } else if afunc == ActivationFunction::Softmax {
+                //self.outputs = Some(softmax(inputs.dot(&self.weights) + &self.biases));
+            }else {
+				outp[i] = Value::tanh(z); 
+			}
+            
         }
         // println!("{:?}", outp);
         self.outputs = Some(outp);
@@ -150,7 +164,7 @@ impl Layer {
 
 pub struct Perceptron {
     pub layers: Vec<Layer>,
-    pub outputs: Option<Array2<f64>>,
+    pub outputs: Option<Vec<Value>>,
     pub output: Option<usize>,
 }
 
@@ -168,16 +182,16 @@ impl Perceptron {
         let output = None;
         Perceptron { layers, outputs, output }
     }
-    pub fn run(&mut self, inputs: &Array2<f64>) {
+    pub fn run(&mut self, inputs: &Vec<Value>) {
         let output_layer_ind = self.layers.len()-1;
         // self.outputs = Some(inputs.dot(&self.weights));
-        self.layers[0].forward(inputs, ActivationFunction::Relu);
+        self.layers[0].forward(inputs, ActivationFunction::Tanh);
         for i in (1..output_layer_ind) { // exclusive, so doesn't do output layer
             let prev = self.layers[i-1].outputs.clone().unwrap();
-            self.layers[i].forward(&prev, ActivationFunction::Relu);
+            self.layers[i].forward(&prev, ActivationFunction::Tanh);
         }
         let last_hidden = self.layers[output_layer_ind-1].outputs.clone().unwrap();
-        self.layers[output_layer_ind].forward(&last_hidden, ActivationFunction::Relu);
+        self.layers[output_layer_ind].forward(&last_hidden, ActivationFunction::Tanh);
         self.outputs = self.layers[output_layer_ind].outputs.clone();
         self.find_output();
 
@@ -187,10 +201,10 @@ impl Perceptron {
         // print(distribution[targ_idx])
     }
 
-    pub fn calculate_loss_log(&mut self, correct_ind: usize) -> f64 {
-        let outputs_clipped: Array2<f64> = self.outputs.clone().unwrap().map(|v| num::clamp(*v, 1e-7, 1.-1e-7));
-        -outputs_clipped[[0, correct_ind]].ln()
-    }
+    // pub fn calculate_loss_log(&mut self, correct_ind: usize) -> f64 {
+    //     let outputs_clipped: Vec<f64> = self.outputs.clone().unwrap().map(|v| num::clamp(*v, 1e-7, 1.-1e-7));
+    //     -outputs_clipped[[0, correct_ind]].ln()
+    // }
 
     pub fn find_output(&mut self) {
         let mut best_ind: usize = 0;
@@ -209,7 +223,7 @@ impl Perceptron {
     // pub fn backpropogate(&mut self) {
     //     let alpha: f64 = 0.001;
     //     // outer layer
-    //     let mut weight_derivs: Array2<f64> =
+    //     let mut weight_derivs: Vec<f64> =
     // }
 }
 
@@ -223,7 +237,7 @@ use petgraph::dot::{Dot, Config};
 use petgraph::visit;
 use rand_distr::num_traits::Pow;
 
-
+	#[derive(Default, Clone)]
 	pub struct Value{
 		data_: f64,
 		gradient_: f64,
@@ -363,6 +377,55 @@ use rand_distr::num_traits::Pow;
 	impl ToString for Value{
 		fn to_string(&self) -> String{
 			format!("Value(data:{}, gradient:{}, operation{})", self.data_, self.gradient_, self.op_)
+		}
+	}
+
+
+	pub fn mul_vec(arr1: &Vec<Value>, arr2: &Vec<Value>) -> Vec<Value> {
+
+		if arr1.len() != arr2.len(){
+			panic!("length of vectors are not right for dot product");
+		}
+
+		let mut ret = vec![Value::default(); arr1.len()];
+
+		for i in 0..arr1.len(){
+			ret[i] = Value::mul(arr1[i], arr2[i]);
+		}
+
+		ret
+
+	}
+
+	pub fn add_vec(arr1: &Vec<Value>, arr2: &Vec<Value>) -> Vec<Value> {
+
+		if arr1.len() != arr2.len(){
+			panic!("length of vectors are not right for adding product");
+		}
+
+		let mut ret = vec![Value::default(); arr1.len()];
+
+		for i in 0..arr1.len(){
+			ret[i] = Value::add(arr1[i], arr2[i]);
+		}
+
+		ret
+
+	}
+
+	pub fn vec_tot(arr1: &Vec<Value>) -> Value {
+		if arr1.len() == 0{
+			panic!("no contents to add in vector");
+		}
+		else if arr1.len() == 1{
+			return arr1[0];
+		}
+		else{
+			let mut ret = Value::add(arr1[0], arr1[1]);
+			for i in 2..arr1.len(){
+				ret = Value::add(ret, arr1[i]);
+			}
+			return ret;
 		}
 	}
 

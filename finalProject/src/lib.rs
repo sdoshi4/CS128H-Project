@@ -73,8 +73,8 @@ pub struct Neuron {
 
 impl Neuron {
     pub fn new(prev_layer_size: usize) -> Self {
-        let weights = Array::random((1, prev_layer_size), Normal::new(1.0, 0.0).unwrap());
-        let bias: f64 = Array::random((1, 1), Normal::new(1.0, 0.0).unwrap()).row(0).to_vec()[0];
+        let weights = Array::random((1, prev_layer_size), Normal::new(0.0, 1.0).unwrap());
+        let bias: f64 = Array::random((1, 1), Normal::new(0.0, 1.0).unwrap()).row(0).to_vec()[0];
         Neuron {weights, bias }
     }
     pub fn print_nueron(self){

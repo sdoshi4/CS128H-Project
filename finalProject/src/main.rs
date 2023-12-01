@@ -4,8 +4,8 @@ use ndarray::Array2;
 use ndarray::array;
 use ndarray::prelude::*;
 use finalProject::Perceptron;
-use finalProject::sigmoid;
-use finalProject::softmax;
+// use finalProject::sigmoid;
+// use finalProject::softmax;
 use mnist::*;
 
 
@@ -54,7 +54,17 @@ fn main() {
         .expect("Error converting testing labels to Array2 struct")
         .map(|x| *x as usize);
 
+    let train_data = Array2::from_shape_vec((50_000, 784), trn_img)
+        .expect("Error converting images to Array3 struct")
+        .map(|x| *x as f32 / 256.);
+
+    let train_labels: Array2<usize> = Array2::from_shape_vec((50_000, 1), trn_lbl)
+        .expect("Error converting testing labels to Array2 struct")
+        .map(|x| *x as usize);
+
     let mut ptest = finalProject::Perceptron::new(784, 10, 2, 16);
+    // run(test_data, test_labels, &mut ptest);
+    train(train_data, train_labels, &mut ptest);
     run(test_data, test_labels, &mut ptest);
     // println!("{:?}", ptest.outputs.unwrap());
 
@@ -89,7 +99,7 @@ pub fn run(test_data: Array2<f32>, test_labels: Array2<usize>, perceptron: &mut 
     // let perceptron_outputs: Vec<usize> = Vec::new();
     for i in (0..10_000) {
         let img = test_data.row(i).clone().into_shape((1, 784)).unwrap();
-        let img2: Array2<f64> = img.map(|x| *x as f64);
+        let img2: Vec<Value> = img.map(|x| Value::new(*x as f64)).into_raw_vec();
         perceptron.run(&img2);
         if (perceptron.output.unwrap() == test_labels.row(i).to_vec()[0]) {
             correct += 1;
@@ -102,11 +112,11 @@ pub fn run(test_data: Array2<f32>, test_labels: Array2<usize>, perceptron: &mut 
 }
 
 pub fn train(train_data: Array2<f32>, train_labels: Array2<usize>, perceptron: &mut Perceptron) {
-    for i in (0..50_000) {
+    for i in (0..5_000) {
         let img = train_data.row(i).clone().into_shape((1, 784)).unwrap();
-        let img2: Array2<Value> = img.map(|x| Value::new(*x as f64));
+        let img2: Vec<Value> = img.map(|x| Value::new(*x as f64)).into_raw_vec();
         perceptron.run(&img2);
-        let encoded_labels: Vec<Value> = Vec::new();
+        let mut encoded_labels: Vec<Value> = Vec::new();
         for j in 0..10 {
             if j == train_labels.row(i).to_vec()[0] {
                 encoded_labels.push(Value::new(1.));
@@ -114,7 +124,8 @@ pub fn train(train_data: Array2<f32>, train_labels: Array2<usize>, perceptron: &
                 encoded_labels.push(Value::new(0.));
             }
         }
-        let losses = perceptron.outputs.unwrap().iter().zip(encoded_labels).map(|(x, y)| Value::mul(Value::add(x, Value::mul(y, Value::new(-1.))), Value::add(x, Value::mul(y, Value::new(-1.)))));
+        let po = perceptron.outputs.clone().unwrap();
+        let losses = po.iter().zip(encoded_labels).map(|(x, y)| Value::mul(Value::add(x.clone(), Value::mul(y.clone(), Value::new(-1.))), Value::add(x.clone(), Value::mul(y, Value::new(-1.)))));
         let mut loss: Value = Value::new(0.);
         for j in losses {
             loss = Value::add(loss, j);
@@ -123,12 +134,12 @@ pub fn train(train_data: Array2<f32>, train_labels: Array2<usize>, perceptron: &
         loss.backwards();
 
         let learning_rate = -0.01;
-        for &mut layer in perceptron.layers.iter_mut() {
-            for &mut neuron in layer.neurons.iter_mut() {
-                for &mut val in neuron.weights.iter_mut() {
-                    val = Value::add(val, Value::mul(Value::new(learning_rate)), val.gradient_);
+        for mut layer in perceptron.layers.iter_mut() {
+            for mut neuron in layer.neurons.iter_mut() {
+                for mut val in neuron.weights.iter_mut() {
+                    val.data_ = val.data_ + (learning_rate * val.gradient_);
                 }
-                neuron.bias = Value::add(bias, Value::mul(Value::new(learning_rate)), bias.gradient_);
+                neuron.bias.data_ = neuron.bias.data_ + (learning_rate * neuron.bias.gradient_);
             }
         }
 

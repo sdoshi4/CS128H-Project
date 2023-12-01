@@ -1,5 +1,6 @@
 
 use ndarray::Axis;
+use ndarray::Array;
 use ndarray_rand::RandomExt;
 use ndarray::ArrayView;
 use num::complex::ComplexFloat;
@@ -75,10 +76,10 @@ impl Neuron {
     pub fn new(prev_layer_size: usize) -> Self {
 
 		let rand_array_f64= Array::random((1, prev_layer_size), Normal::new(0.0, 1.0).unwrap());
-		let mut rand_array_value:Vec::<Value>= vec![Value::default(); prev_layer_size];
+		let mut rand_array_value:Vec::<Value> = vec![Value::default(); prev_layer_size];
 
 		for row in 0..rand_array_f64.len(){
-			rand_array_value[row] = Value::new(rand_array_f64[row]);
+			rand_array_value[row] = Value::new(rand_array_f64.clone().remove_axis(Axis(0))[row]);
 		}
 
         let weights: Vec<Value> = rand_array_value;
@@ -102,7 +103,7 @@ pub struct Layer {
     // pub weights: Vec<f64>,
     // pub biases: Vec<f64>,
     pub neurons: Vec<Neuron>,
-    pub outputs: Option<Vec<Value>>,
+    // pub outputs: Option<Vec<Value>>,
 }
 
 impl Layer {
@@ -116,15 +117,14 @@ impl Layer {
             neurons.push(new_neuron);
         }
 
-        let outputs = None;
         // Layer {weights, biases, outputs}
-        Layer { neurons, outputs }
+        Layer { neurons }
     }
 
 	
 
 
-    pub fn forward(&mut self, inputs: &Vec<Value>, afunc: ActivationFunction) {
+    pub fn forward(&mut self, inputs: &Vec<Value>, afunc: ActivationFunction) -> Vec<Value> {
         let mut outp: Vec<Value>  = vec![Value::default(); self.neurons.len()];
 
 
@@ -133,8 +133,8 @@ impl Layer {
             // let r: f64 = inputs.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
             // let r: f64 = inputs.iter().zip(&self.neurons[i].weights.iter()).map(|(x, y)| x * y).sum();
             // println!("{:?}", outp);
-            let z: Value = Value::add(vec_tot(&mul_vec(inputs, (&self.neurons[i].weights))), self.neurons[i].bias); //.remove_axis(ndarray::Axis(0)).to_vec()[0]
-            outp[i] = z;
+            let z: Value = Value::add(vec_tot(mul_vec(inputs.clone(), (self.neurons[i].weights).clone())), self.neurons[i].bias.clone()); //.remove_axis(ndarray::Axis(0)).to_vec()[0]
+            // outp[i] = z;
            // let a = relu(array![[z]]);
            // self.outputs.unwrap().append(axis, array);
 
@@ -150,7 +150,8 @@ impl Layer {
             
         }
         // println!("{:?}", outp);
-        self.outputs = Some(outp);
+        // self.outputs = Some(outp);
+        outp
         
     }
     pub fn print_layer(self){
@@ -185,15 +186,15 @@ impl Perceptron {
     pub fn run(&mut self, inputs: &Vec<Value>) {
         let output_layer_ind = self.layers.len()-1;
         // self.outputs = Some(inputs.dot(&self.weights));
-        self.layers[0].forward(inputs, ActivationFunction::Tanh);
+        let mut outputs: Vec<Value> = self.layers[0].forward(inputs, ActivationFunction::Tanh);
         for i in (1..output_layer_ind) { // exclusive, so doesn't do output layer
-            let prev = self.layers[i-1].outputs.clone().unwrap();
-            self.layers[i].forward(&prev, ActivationFunction::Tanh);
+            // let prev = self.layers[i-1].outputs.clone().unwrap();
+            outputs = self.layers[i].forward(&outputs, ActivationFunction::Tanh);
         }
-        let last_hidden = self.layers[output_layer_ind-1].outputs.clone().unwrap();
-        self.layers[output_layer_ind].forward(&last_hidden, ActivationFunction::Tanh);
-        self.outputs = self.layers[output_layer_ind].outputs.clone();
-        self.find_output();
+        // let last_hidden = self.layers[output_layer_ind-1].outputs.clone().unwrap();
+        self.outputs = Some(self.layers[output_layer_ind].forward(&outputs, ActivationFunction::Tanh));
+        // self.outputs = self.layers[output_layer_ind].outputs.clone();
+        // self.find_output();
 
         // loss is just -log(ouput[correct_ind])
         // class_targets = [0, 1, 1]
@@ -206,19 +207,19 @@ impl Perceptron {
     //     -outputs_clipped[[0, correct_ind]].ln()
     // }
 
-    pub fn find_output(&mut self) {
-        let mut best_ind: usize = 0;
-        let mut shortest_distance: f64 = 10.0;
-        let mut ind = 0;
-        for i in self.outputs.clone().unwrap() {
-            if abs(i-1.) < shortest_distance {
-                shortest_distance = abs(i-1.);
-                best_ind = ind;
-            }
-            ind+=1;
-        }
-        self.output = Some(best_ind);
-    }
+    // pub fn find_output(&mut self) {
+    //     let mut best_ind: usize = 0;
+    //     let mut shortest_distance: f64 = 10.0;
+    //     let mut ind = 0;
+    //     for i in self.outputs.clone().unwrap() {
+    //         if abs(i-1.) < shortest_distance {
+    //             shortest_distance = abs(i-1.);
+    //             best_ind = ind;
+    //         }
+    //         ind+=1;
+    //     }
+    //     self.output = Some(best_ind);
+    // }
 
     // pub fn backpropogate(&mut self) {
     //     let alpha: f64 = 0.001;
@@ -301,7 +302,7 @@ use rand_distr::num_traits::Pow;
 			self.gradient_ = 1.0;
 			let topo_order: Vec<_> = topo_order_rev.iter().rev().cloned().collect();
 
-			print!("topo_order size:{}", topo_order_rev.len());
+			// print!("topo_order size:{}", topo_order_rev.len());
 			for v_address in topo_order{
 				unsafe {
 					(*(v_address)).single_back_prop();
@@ -326,7 +327,7 @@ use rand_distr::num_traits::Pow;
 		}
 
 		fn single_back_prop(&mut self){
-			print!("single_back_prop{}", self.op_);
+			// print!("single_back_prop{}", self.op_);
 			match self.op_ {
 				'+' => self.add_back(),
 				'*' => self.mul_back(),
@@ -343,7 +344,7 @@ use rand_distr::num_traits::Pow;
 			}
 		}
 		fn mul_back(&mut self){
-			print!("Mul_back");
+			// print!("Mul_back");
 			let mut v1_data = 0.0;
 			let mut v2_data = 0.0;
 
@@ -353,8 +354,8 @@ use rand_distr::num_traits::Pow;
 			if let Some(ref mut val) = self.prev_.get_mut(1){
 				v2_data = val.data_;
 			}
-			println!("v1_grad:{}", v1_data);
-			println!("v2_grad:{}", v2_data);
+			// println!("v1_grad:{}", v1_data);
+			// println!("v2_grad:{}", v2_data);
 			if let Some(ref mut val) = self.prev_.get_mut(0){
 				val.gradient_ =  v2_data * self.gradient_;
 			}
@@ -381,7 +382,7 @@ use rand_distr::num_traits::Pow;
 	}
 
 
-	pub fn mul_vec(arr1: &Vec<Value>, arr2: &Vec<Value>) -> Vec<Value> {
+	pub fn mul_vec(mut arr1: Vec<Value>, mut arr2: Vec<Value>) -> Vec<Value> {
 
 		if arr1.len() != arr2.len(){
 			panic!("length of vectors are not right for dot product");
@@ -390,14 +391,16 @@ use rand_distr::num_traits::Pow;
 		let mut ret = vec![Value::default(); arr1.len()];
 
 		for i in 0..arr1.len(){
-			ret[i] = Value::mul(arr1[i], arr2[i]);
+			let val1 = arr1.pop().unwrap();
+			let val2 = arr2.pop().unwrap();
+			ret[i] = Value::mul(val1, val2);
 		}
 
 		ret
 
 	}
 
-	pub fn add_vec(arr1: &Vec<Value>, arr2: &Vec<Value>) -> Vec<Value> {
+	pub fn add_vec(mut arr1: Vec<Value>, mut arr2: Vec<Value>) -> Vec<Value> {
 
 		if arr1.len() != arr2.len(){
 			panic!("length of vectors are not right for adding product");
@@ -406,26 +409,34 @@ use rand_distr::num_traits::Pow;
 		let mut ret = vec![Value::default(); arr1.len()];
 
 		for i in 0..arr1.len(){
-			ret[i] = Value::add(arr1[i], arr2[i]);
+			let val1 = arr1.pop().unwrap();
+			let val2 = arr2.pop().unwrap();
+			ret[i] = Value::add(val1, val2);
 		}
 
 		ret
 
 	}
 
-	pub fn vec_tot(arr1: &Vec<Value>) -> Value {
+	pub fn vec_tot(mut arr1: Vec<Value>) -> Value {
 		if arr1.len() == 0{
 			panic!("no contents to add in vector");
 		}
 		else if arr1.len() == 1{
-			return arr1[0];
+            
+			return Value::add(arr1[0].clone(),Value::new(0.0));
 		}
 		else{
-			let mut ret = Value::add(arr1[0], arr1[1]);
-			for i in 2..arr1.len(){
-				ret = Value::add(ret, arr1[i]);
-			}
-			return ret;
+            let mut ret: Value = Value::new(0.0);
+            for i in 0..arr1.len() {
+                ret = Value::add(ret, arr1.pop().unwrap());
+            }
+            ret
+			// let mut ret = Value::add(arr1[0].clone(), arr1[1].clone());
+			// for i in 2..arr1.len(){
+			// 	ret = Value::add(ret, arr1[i].clone());
+			// }
+			// return ret;
 		}
 	}
 

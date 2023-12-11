@@ -1,14 +1,11 @@
 There are two versions of our code to run: The Genetic Algorithm code and the Gradient Descent code.
 
-In order to run the Gradient Descent code, clone the repository's main branch, using `git clone`.
+The first step is to clone the repository using `git clone`.
 
 Next, move into the finalProject directory using `cd finalProject`.
 
-Finally, run `cargo run --release` for optimized performance. Note, this code will take a super long time to go, but you can see the backpropogation in action through the command line.
+Now, to run the gradient descent code, run `cargo run --release` for optimized performance. Note, this code will take a super long time to run (we left it overnight and it still didn't finish), but you can see the backpropogation in action through the command line.
 
+In order to run the Genetic Algorithm code, navigate into the branch titled "Genetic-Algorithm" using `git checkout 'Genetic-Algorithm'`.
 
-In order to run the Genetic Algorith code, clone the branch titled "Genetic-Algorithm".
-
-Then, move into the finalProject directory using `cd finalProject`.
-
-And finally, run `cargo run --release`. This code takes less time then the gradient descent so it should finish in less than 10ish minutes, and you can see the losses decreasing each generation through the command line.
+Then, run `cargo run --release` again.  This code takes less time then the gradient descent so it should finish in less than 10ish minutes, and you can see the losses decreasing through a print statement of the accumulated loss of the best neuron in each generation.
